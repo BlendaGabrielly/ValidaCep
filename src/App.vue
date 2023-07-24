@@ -1,12 +1,18 @@
 <template>
  <div id="app">
    <h1>{{cepUsuario}}</h1>
-   <input type="Text" v-model="cepUsuario"/>
-   <button @click="pesquisar()">Pesquisar</button>
-   
+   <input :class="{ 'input-erro': erro }" required type="Text" placeholder="Digite o cep" v-model="cepUsuario"/>
+   <button :class="{ 'botao-clicado': botaoClicado }" @click="trocarCor(),pesquisar()">Pesquisar</button>
    <router-view></router-view>
    </div>
- <!--</div>-->
+
+   <!-- Mostrar informações do CEP na página -->
+<div v-if="informacoesCEP!== null">
+  <p>O cep encontrado: {{ informacoesCEP.localidade }}</p>
+</div>
+<div v-else>
+  <p>{{ mensagemErro }}</p>
+</div>
 </template>
 
 <script>
@@ -16,7 +22,11 @@ export default {
   data(){
     return{
       cepUsuario:null,
-      Pesquisar:true
+      Pesquisar:true,
+      botaoClicado: false,
+      mensagemErro: "", 
+      erro: false, 
+      informacoesCEP: null
     }
   },
   components: {
@@ -34,15 +44,27 @@ methods:{
     .get(`https://viacep.com.br/ws/${cep}/json/`)
     .then((resposta) => {
       if(resposta.data.localidade){
-      console.log(resposta.data);
-      alert(`A rua é:${resposta.data.localidade}`);
+        this.informacoesCEP = resposta.data;
+        this.mensagemErro = "";
+        this.erro = false;
      }
     else{
-       console.log(resposta.data);
-       alert(`A rua não pertece ao Iporá e da cidade:${resposta.data.localidade}`);
-     }
-    });
-  }
+      this.informacoesCEP = null; 
+      this.mensagemErro = "CEP não encontrado."; 
+      this.erro = true;
+      }
+    })
+        .catch((error) => {
+          console.error("Erro nas informações do CEP:", error);
+          this.informacoesCEP = null;
+          this.mensagemErro = "Erro ao obter informações do CEP."; // Define a mensagem de erro em caso de erro na requisição
+          this.erro = true;
+        });
+  },
+  trocarCor() {
+      // Altera o valor da propriedade botaoClicado para o oposto do seu valor atual
+      this.botaoClicado = !this.botaoClicado;
+    },
 }
 }
 </script>
@@ -55,5 +77,38 @@ methods:{
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+@keyframes shake{
+  0%, 100% {translate: 0;}
+  25% {translate: 8px 0;}
+  75% {translate: -8px 0;}
+}
+input{
+  width: 210px;
+  height: 60px;
+  padding: 0 16px;
+  background: transparent;
+  border-radius: 4px;
+  color: #010000;
+  animation: shake 0.14s 3;
+}
+input:valid{
+  border-color: #45feaf;
+  animation: none;
+}
+input:error{
+  border-color: #db1414;
+  animation: shake 0.14s 3;
+}
+button {
+  background-color: #9932cc; /* Cor do botão (substitua pelo código da cor desejada) */
+  color: #ffffff; 
+  border-radius: 20% 50%;
+  width: 210px;
+  height: 60px;
+}
+.botao-clicado {
+  background-color: #00ff00; /* Cor do botão quando clicado */
+  color: #ffffff; /* Cor do texto no botão quando clicado */
 }
 </style>
